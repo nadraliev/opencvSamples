@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file:///media/files1TB/projects/AndroidStudioProjects/opencvSamples/app/libs/OpenCV/OpenCV.iml" filepath="/media/files1TB/projects/AndroidStudioProjects/opencvSamples/app/libs/OpenCV/OpenCV.iml" />
+      <module fileurl="file:///media/files1TB/projects/AndroidStudioProjects/opencvSamples/app/app.iml" filepath="/media/files1TB/projects/AndroidStudioProjects/opencvSamples/app/app.iml" />
+      <module fileurl="file:///media/files1TB/projects/AndroidStudioProjects/opencvSamples/app/libs/libs.iml" filepath="/media/files1TB/projects/AndroidStudioProjects/opencvSamples/app/libs/libs.iml" />
+      <module fileurl="file:///media/files1TB/projects/AndroidStudioProjects/opencvSamples/opencvSamples.iml" filepath="/media/files1TB/projects/AndroidStudioProjects/opencvSamples/opencvSamples.iml" />
+    </modules>
+  </component>
+</project>
