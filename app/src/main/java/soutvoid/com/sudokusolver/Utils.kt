@@ -1,4 +1,4 @@
-package soutvoid.com.opencvsamples
+package soutvoid.com.sudokusolver
 
 import android.graphics.Bitmap
 import org.opencv.android.Utils

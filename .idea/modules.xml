@@ -2,10 +2,14 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file:///media/files1TB/projects/AndroidStudioProjects/opencvSamples/app/libs/OpenCV/OpenCV.iml" filepath="/media/files1TB/projects/AndroidStudioProjects/opencvSamples/app/libs/OpenCV/OpenCV.iml" />
-      <module fileurl="file:///media/files1TB/projects/AndroidStudioProjects/opencvSamples/app/app.iml" filepath="/media/files1TB/projects/AndroidStudioProjects/opencvSamples/app/app.iml" />
-      <module fileurl="file:///media/files1TB/projects/AndroidStudioProjects/opencvSamples/app/libs/libs.iml" filepath="/media/files1TB/projects/AndroidStudioProjects/opencvSamples/app/libs/libs.iml" />
-      <module fileurl="file:///media/files1TB/projects/AndroidStudioProjects/opencvSamples/opencvSamples.iml" filepath="/media/files1TB/projects/AndroidStudioProjects/opencvSamples/opencvSamples.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/libs/OpenCV/OpenCV.iml" filepath="$PROJECT_DIR$/app/libs/OpenCV/OpenCV.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../../../files1TB/projects/AndroidStudioProjects/opencvSamples/app/libs/OpenCV/OpenCV.iml" filepath="$PROJECT_DIR$/../../../../files1TB/projects/AndroidStudioProjects/opencvSamples/app/libs/OpenCV/OpenCV.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../../../files1TB/projects/AndroidStudioProjects/opencvSamples/app/app.iml" filepath="$PROJECT_DIR$/../../../../files1TB/projects/AndroidStudioProjects/opencvSamples/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/libs/libs.iml" filepath="$PROJECT_DIR$/app/libs/libs.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../../../files1TB/projects/AndroidStudioProjects/opencvSamples/app/libs/libs.iml" filepath="$PROJECT_DIR$/../../../../files1TB/projects/AndroidStudioProjects/opencvSamples/app/libs/libs.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../../../files1TB/projects/AndroidStudioProjects/opencvSamples/opencvSamples.iml" filepath="$PROJECT_DIR$/../../../../files1TB/projects/AndroidStudioProjects/opencvSamples/opencvSamples.iml" />
+      <module fileurl="file://$PROJECT_DIR$/sudokuSolver.iml" filepath="$PROJECT_DIR$/sudokuSolver.iml" />
     </modules>
   </component>
 </project>
