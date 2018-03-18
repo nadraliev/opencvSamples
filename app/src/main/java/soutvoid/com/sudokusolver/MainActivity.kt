@@ -2,17 +2,17 @@ package soutvoid.com.sudokusolver
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.PointF
 import android.os.Bundle
 import android.provider.MediaStore
 import android.support.v7.app.AppCompatActivity
+import android.view.View
 import kotlinx.android.synthetic.main.activity_main.*
 import org.jetbrains.anko.sdk25.coroutines.onClick
 import org.opencv.android.Utils
-import org.opencv.core.Core
-import org.opencv.core.Mat
-import org.opencv.core.Point
-import org.opencv.core.Scalar
+import org.opencv.core.*
 import org.opencv.imgproc.Imgproc
 
 class MainActivity : AppCompatActivity() {
@@ -33,6 +33,12 @@ class MainActivity : AppCompatActivity() {
             }
             startActivityForResult(chooser, 0)
         }
+        cropImageBtn.onClick {
+            val croppedPoints = imageView.getCroppedCoords()
+            val bitmap = imageView.getBitmap()!!
+            imageView.visibility = View.GONE
+            doOpenCvMagic(bitmap, croppedPoints)
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -40,37 +46,46 @@ class MainActivity : AppCompatActivity() {
         if (resultCode == Activity.RESULT_OK) {
             data?.data?.let {
                 val inputStream = baseContext.contentResolver.openInputStream(it)
-                doUsingOpenCv {
-                    val bmp = BitmapFactory.decodeStream(inputStream)
-                    bmp ?: return@doUsingOpenCv
-                    val img = Mat().apply { Utils.bitmapToMat(bmp, this) }
-                    Imgproc.cvtColor(img, img, Imgproc.COLOR_RGB2GRAY)
-                    //Imgproc.GaussianBlur(img, img, Size(3.0, 3.0), .0)
-                    Imgproc.adaptiveThreshold(img, img, 255.0, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, 75, 10.0)
-                    Core.bitwise_not(img, img)
-
-                    val lines = Mat()
-                    println(img.width())
-                    Imgproc.HoughLinesP(img, lines, 1.0, Math.PI / 180, 50, img.width() / 2.0, img.width() / 20.0)
-
-                    println("cols: ${lines.cols()}")
-                    println("lines: ${lines.rows()}")
-
-                    Imgproc.cvtColor(img, img, Imgproc.COLOR_GRAY2RGB)
-
-                    (1..lines.rows()).mapNotNull { lines.get(it, 0) }
-                            .filter {
-                                Math.sqrt(Math.pow(it[0] - it[2], 2.0) + Math.pow(it[1] - it[3], 2.0)) >= img.width() * 0.5
-                            }.also { println("lines filtered: ${it.count()}") }
-                            .forEach {
-                                Imgproc.line(img, Point(it[0], it[1]), Point(it[2], it[3]), Scalar((Math.random() * 1000) % 250, (Math.random() * 1000) % 250, (Math.random() * 1000) % 250), 3)
-                            }
-
-
-
-                    imageView.setImageBitmap(img.toBitmap())
-                }
+                val bmp = BitmapFactory.decodeStream(inputStream)
+                bmp ?: return
+                //doOpenCvMagic(bmp)
+                imageView.setImageBitmap(bmp)
             }
+        }
+    }
+
+    fun doOpenCvMagic(bmp: Bitmap, croppedPoints: List<PointF>) {
+        doUsingOpenCv {
+            val img = Mat().apply { Utils.bitmapToMat(bmp, this) }
+            val pts1 = MatOfPoint2f(*croppedPoints.map { it.toCvPoint() }.toTypedArray())
+            val pts2 = MatOfPoint2f(Point(.0, .0), Point(400.0, .0), Point(400.0, 400.0), Point(.0, 400.0))
+            val m = Imgproc.getPerspectiveTransform(pts1, pts2)
+            Imgproc.warpPerspective(img, img, m, Size(400.0, 400.0))
+            Imgproc.cvtColor(img, img, Imgproc.COLOR_RGB2GRAY)
+            //Imgproc.GaussianBlur(img, img, Size(3.0, 3.0), .0)
+            Imgproc.adaptiveThreshold(img, img, 255.0, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, 75, 10.0)
+            Core.bitwise_not(img, img)
+
+            val lines = Mat()
+            println(img.width())
+            Imgproc.HoughLinesP(img, lines, 1.0, Math.PI / 180, 50, img.width() / 2.0, img.width() / 20.0)
+
+            println("cols: ${lines.cols()}")
+            println("lines: ${lines.rows()}")
+
+            Imgproc.cvtColor(img, img, Imgproc.COLOR_GRAY2RGB)
+
+            (1..lines.rows()).mapNotNull { lines.get(it, 0) }
+                    .filter {
+                        Math.sqrt(Math.pow(it[0] - it[2], 2.0) + Math.pow(it[1] - it[3], 2.0)) >= img.width() * 0.5
+                    }.also { println("lines filtered: ${it.count()}") }
+                    .forEach {
+                        Imgproc.line(img, Point(it[0], it[1]), Point(it[2], it[3]), Scalar((Math.random() * 1000) % 250, (Math.random() * 1000) % 250, (Math.random() * 1000) % 250), 3)
+                    }
+
+
+
+            imageView2.setImageBitmap(img.toBitmap())
         }
     }
 
