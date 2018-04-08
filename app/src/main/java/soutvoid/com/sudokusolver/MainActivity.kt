@@ -284,17 +284,9 @@ class MainActivity : AppCompatActivity() {
 
             maxLength = sqrt(maxLength)
 
-            val src = Mat(4, 2, CvType.CV_8UC1)
-            val dst = Mat(4, 2, CvType.CV_8UC1)
-            src.put(0, 0, ptTopLeft.toFloatArray())
-            src.put(1, 0, ptTopRight.toFloatArray())
-            src.put(2, 0, ptBottomRight.toFloatArray())
-            src.put(3, 0, ptBottomLeft.toFloatArray())
+            val src = MatOfPoint2f(ptTopLeft, ptTopRight, ptBottomRight, ptBottomLeft)
+            val dst = MatOfPoint2f(Point(.0, .0), Point(maxLength - 1, .0), Point(maxLength - 1, maxLength - 1), Point(.0, maxLength - 1))
 
-            dst.put(0, 0, floatArrayOf(0f, 0f))
-            dst.put(1, 0, floatArrayOf(maxLength.toFloat() - 1f, 0f))
-            dst.put(2, 0, floatArrayOf(maxLength.toFloat() - 1f, maxLength.toFloat() - 1f))
-            dst.put(3, 0, floatArrayOf(0f, maxLength.toFloat() - 1f))
 
             val undistorted = Mat(Size(maxLength, maxLength), CvType.CV_8UC1)
             Imgproc.warpPerspective(original, undistorted, Imgproc.getPerspectiveTransform(src, dst), Size(maxLength, maxLength))
