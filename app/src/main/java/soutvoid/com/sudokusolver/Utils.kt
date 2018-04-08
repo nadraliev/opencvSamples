@@ -21,3 +21,5 @@ fun length(a: PointF, b: PointF): Float =
 
 fun PointF.toCvPoint(): Point =
         Point(x.toDouble(), y.toDouble())
+
+fun Point.toFloatArray(): FloatArray = floatArrayOf(x.toFloat(), y.toFloat())
