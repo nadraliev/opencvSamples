@@ -11,6 +11,6 @@ import org.junit.Test
 class ExampleUnitTest {
     @Test
     fun addition_isCorrect() {
-        assertEquals(4, 2 + 2)
+        assertEquals(2018915346, byteArrayOf(0x12, 0x34, 0x56, 0x78).reversedArray().toInt())
     }
 }
