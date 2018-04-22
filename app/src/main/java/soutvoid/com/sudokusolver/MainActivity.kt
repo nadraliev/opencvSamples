@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.provider.MediaStore
 import android.support.v7.app.AppCompatActivity
+import com.orhanobut.logger.Logger
 import kotlinx.android.synthetic.main.activity_main.*
 import org.jetbrains.anko.sdk25.coroutines.onClick
 import org.opencv.android.Utils
@@ -292,6 +293,42 @@ class MainActivity : AppCompatActivity() {
             Imgproc.warpPerspective(original, undistorted, Imgproc.getPerspectiveTransform(src, dst), Size(maxLength, maxLength))
 
             bitmaps.add(undistorted.toBitmap())
+
+            Imgproc.cvtColor(undistorted, undistorted, Imgproc.COLOR_RGB2GRAY)
+            val undistortedThreshed = undistorted.clone()
+            Imgproc.adaptiveThreshold(undistorted, undistortedThreshed, 255.0, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY_INV, 101, 1.0)
+
+            bitmaps.add(undistortedThreshed.toBitmap())
+
+            val recognizer = DigitRecognizer()
+            recognizer.train("train-images-idx3-ubyte", "train-labels-idx1-ubyte", this)
+
+            var dist = ceil(maxLength / 9).toInt()
+            val currentCell = Mat(dist, dist, CvType.CV_8UC1)
+            val stringBuilder = StringBuilder()
+
+            for (j in 0 until 9) {
+                for (i in 0 until 9) {
+                    for (y in 0 until dist) {
+                        if (j * dist + y >= undistortedThreshed.cols()) break
+                        for (x in 0 until dist) {
+                            if (i * dist + x >= undistortedThreshed.rows()) break
+                            currentCell.put(y, x, *undistortedThreshed.get(j * dist + y, i * dist + x))
+                        }
+                    }
+
+                    val area = currentCell.countWhitePixels()
+                    if (area > currentCell.rows() * currentCell.cols() / 5) {
+                        val number = recognizer.classify(currentCell, bitmaps)
+                        stringBuilder.append("$number ")
+                    } else {
+                        stringBuilder.append(" empty ")
+                    }
+                }
+                stringBuilder.append(" col end\n ")
+            }
+
+            Logger.d("sudoku\n $stringBuilder")
 
             showImage()
         }

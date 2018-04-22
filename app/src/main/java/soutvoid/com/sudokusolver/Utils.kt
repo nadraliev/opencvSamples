@@ -51,3 +51,12 @@ fun ByteArray.toInt(): Int {
     val fourth = this[0].toInt() shl 24
     return first or second or third or fourth
 }
+
+fun Mat.countWhitePixels(): Int {
+    var result = 0
+    for (y in 0 until rows())
+        for (x in 0 until cols())
+            if (get(y, x) != null && get(y, x).isNotEmpty() && get(y, x)[0] == 255.0)
+                result++
+    return result
+}

@@ -1,12 +1,15 @@
 package soutvoid.com.sudokusolver
 
 import android.content.Context
-import org.opencv.core.Core
-import org.opencv.core.CvType
-import org.opencv.core.Mat
+import android.graphics.Bitmap
+import org.opencv.core.*
+import org.opencv.core.CvType.CV_8UC1
+import org.opencv.imgproc.Imgproc
+import org.opencv.imgproc.Imgproc.floodFill
 import org.opencv.ml.KNearest
 import org.opencv.ml.Ml
 import java.nio.ByteBuffer
+
 
 class DigitRecognizer {
 
@@ -61,14 +64,88 @@ class DigitRecognizer {
         return true
     }
 
-    fun classify(img: Mat): Int {
-        val cloneImg = img
+    fun classify(img: Mat, bitmaps: MutableList<Bitmap>): Int {
+        val cloneImg = preprocessImage(img, bitmaps)
+        cloneImg.convertTo(cloneImg, CvType.CV_32F)
         val results = Mat(1, 1, CvType.CV_8U)
         knn.findNearest(cloneImg, 10, results, Mat(), Mat())
         return results.get(0, 0)[0].toInt()
     }
 
-    private fun preprocessImage(img: Mat): Mat {
-        return Mat()
+    private fun preprocessImage(img: Mat, bitmaps: MutableList<Bitmap>): Mat {
+        var rowTop = -1
+        var rowBottom = -1
+        var colLeft = -1
+        var colRight = -1
+
+        var temp = Mat()
+        var thresholdBottom = 50
+        var thresholdTop = 50
+        var thresholdLeft = 50
+        var thresholdRight = 50
+        var center = img.rows() / 2
+        for (i in center until img.rows()) {
+            if (rowBottom == -1) {
+                temp = img.row(i)
+                if (Core.sumElems(temp).`val`[0] < thresholdBottom || i == img.rows() - 1)
+                    rowBottom = i
+
+            }
+
+            if (rowTop == -1) {
+                temp = img.row(img.rows() - i)
+                if (Core.sumElems(temp).`val`[0] < thresholdTop || i == img.rows() - 1)
+                    rowTop = img.rows() - i
+
+            }
+
+            if (colRight == -1) {
+                temp = img.col(i)
+                if (Core.sumElems(temp).`val`[0] < thresholdRight || i == img.cols() - 1)
+                    colRight = i
+
+            }
+
+            if (colLeft == -1) {
+                temp = img.col(img.cols() - i)
+                if (Core.sumElems(temp).`val`[0] < thresholdLeft || i == img.cols() - 1)
+                    colLeft = img.cols() - i
+            }
+        }
+
+        var newImg = Mat.zeros(img.rows(), img.cols(), CV_8UC1);
+
+        var startAtX = (newImg.cols() / 2) - (colRight - colLeft) / 2
+
+        var startAtY = (newImg.rows() / 2) - (rowBottom - rowTop) / 2
+
+        for (y in startAtY until (newImg.rows() / 2) + (rowBottom - rowTop) / 2) {
+            for (x in startAtX until (newImg.cols() / 2) + (colRight - colLeft) / 2) {
+                newImg.put(y, x, *img.get(rowTop + (y - startAtY), colLeft + (x - startAtX)))
+            }
+        }
+
+        var cloneImg = Mat(numRows, numCols, CV_8UC1)
+
+        Imgproc.resize(newImg, cloneImg, Size(numCols.toDouble(), numRows.toDouble()))
+
+        var flooded = Mat.zeros(Size(cloneImg.cols() + 2.0, cloneImg.rows() + 2.0), CvType.CV_8UC1)
+
+        // Now fill along the borders
+        for (i in 0 until cloneImg.rows()) {
+            floodFill(cloneImg, flooded, Point(.0, i.toDouble()), Scalar(.0, .0, .0))
+            flooded = Mat.zeros(Size(cloneImg.cols() + 2.0, cloneImg.rows() + 2.0), CvType.CV_8UC1)
+
+            floodFill(cloneImg, flooded, Point(cloneImg.cols().toDouble() - 1, i.toDouble()), Scalar(.0, .0, .0))
+            flooded = Mat.zeros(Size(cloneImg.cols() + 2.0, cloneImg.rows() + 2.0), CvType.CV_8UC1)
+
+            floodFill(cloneImg, flooded, Point(i.toDouble(), .0), Scalar(.0))
+            flooded = Mat.zeros(Size(cloneImg.cols() + 2.0, cloneImg.rows() + 2.0), CvType.CV_8UC1)
+            floodFill(cloneImg, flooded, Point(i.toDouble(), cloneImg.rows().toDouble() - 1), Scalar(.0))
+        }
+
+        bitmaps.add(cloneImg.toBitmap())
+        cloneImg = cloneImg.reshape(1, 1)
+        return cloneImg
     }
 }
