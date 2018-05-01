@@ -288,15 +288,36 @@ class MainActivity : AppCompatActivity() {
             val src = MatOfPoint2f(ptTopLeft, ptTopRight, ptBottomRight, ptBottomLeft)
             val dst = MatOfPoint2f(Point(.0, .0), Point(maxLength - 1, .0), Point(maxLength - 1, maxLength - 1), Point(.0, maxLength - 1))
 
+            val threshed = original.clone()
+            Imgproc.cvtColor(threshed, threshed, Imgproc.COLOR_RGB2GRAY)
+            threshed.convertTo(threshed, CvType.CV_8UC1)
+            Imgproc.adaptiveThreshold(threshed, threshed, 255.0, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY_INV, 101, 1.0)
 
-            val undistorted = Mat(Size(maxLength, maxLength), CvType.CV_8UC1)
-            Imgproc.warpPerspective(original, undistorted, Imgproc.getPerspectiveTransform(src, dst), Size(maxLength, maxLength))
+            bitmaps.add(threshed.toBitmap())
 
-            bitmaps.add(undistorted.toBitmap())
+            //delete grid here
+            maxArea = -1
+            point = Point(0.0, 0.0)
 
-            Imgproc.cvtColor(undistorted, undistorted, Imgproc.COLOR_RGB2GRAY)
-            val undistortedThreshed = undistorted.clone()
-            Imgproc.adaptiveThreshold(undistorted, undistortedThreshed, 255.0, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY_INV, 101, 1.0)
+            val threshedClone = threshed.clone()
+            flooded = Mat.zeros(Size(threshedClone.cols() + 2.0, threshedClone.rows() + 2.0), CvType.CV_8UC1)
+            for (y in 0..threshedClone.size().height.toInt()) {
+                for (x in 0..threshedClone.size().width.toInt()) {
+                    if (threshedClone[y, x] != null && threshedClone[y, x][0] >= 128) {
+                        val area = Imgproc.floodFill(threshedClone, flooded, Point(x.toDouble(), y.toDouble()), Scalar(64.0, .0, .0))
+                        if (area > maxArea) {
+                            maxArea = area
+                            point = Point(x.toDouble(), y.toDouble())
+                        }
+                    }
+                }
+            }
+            flooded = Mat.zeros(Size(threshedClone.cols() + 2.0, threshedClone.rows() + 2.0), CvType.CV_8UC1)
+            Imgproc.floodFill(threshed, flooded, point, Scalar.all(0.0))
+            bitmaps.add(threshed.toBitmap())
+
+            val undistortedThreshed = Mat(Size(maxLength, maxLength), CvType.CV_8UC1)
+            Imgproc.warpPerspective(threshed, undistortedThreshed, Imgproc.getPerspectiveTransform(src, dst), Size(maxLength, maxLength))
 
             bitmaps.add(undistortedThreshed.toBitmap())
 
@@ -318,7 +339,7 @@ class MainActivity : AppCompatActivity() {
                     }
 
                     val area = currentCell.countWhitePixels()
-                    if (area > currentCell.rows() * currentCell.cols() / 5) {
+                    if (area > currentCell.rows() * currentCell.cols() / 20) {
                         val number = recognizer.classify(currentCell, bitmaps)
                         stringBuilder.append("$number ")
                     } else {

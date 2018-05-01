@@ -2,12 +2,13 @@ package soutvoid.com.sudokusolver
 
 import android.content.Context
 import android.graphics.Bitmap
+import com.orhanobut.logger.Logger
 import org.opencv.core.*
 import org.opencv.core.CvType.CV_8UC1
 import org.opencv.imgproc.Imgproc
 import org.opencv.imgproc.Imgproc.floodFill
-import org.opencv.ml.KNearest
 import org.opencv.ml.Ml
+import org.opencv.ml.SVM
 import java.nio.ByteBuffer
 
 
@@ -17,7 +18,7 @@ class DigitRecognizer {
         const val MAX_NUM_IMAGES = 60000
     }
 
-    private val knn = KNearest.create()
+    private val knn = SVM.create()
     public var numRows = 0
     public var numCols = 0
     public var numImages = 0
@@ -56,20 +57,26 @@ class DigitRecognizer {
         labelsFis.read(labelsData, 0, numImages)
         tempLabels.put(0, 0, labelsData)
 
+        val intlables = MatOfInt(*labelsData.map { it.toInt() }.toIntArray())
+
         Core.transpose(tempLabels, trainingLabels)
         trainingLabels.convertTo(trainingLabels, CvType.CV_32FC1)
         labelsFis.close()
 
-        knn.train(trainingImages, Ml.ROW_SAMPLE, trainingLabels)
+        knn.type = SVM.C_SVC
+        knn.setKernel(SVM.LINEAR)
+        knn.train(trainingImages, Ml.ROW_SAMPLE, intlables)
+        Logger.d("trained")
         return true
     }
 
     fun classify(img: Mat, bitmaps: MutableList<Bitmap>): Int {
         val cloneImg = preprocessImage(img, bitmaps)
         cloneImg.convertTo(cloneImg, CvType.CV_32F)
-        val results = Mat(1, 1, CvType.CV_8U)
-        knn.findNearest(cloneImg, 10, results, Mat(), Mat())
-        return results.get(0, 0)[0].toInt()
+//        val results = Mat(1, 1, CvType.CV_8U)
+//        knn.findNearest(cloneImg, 10, results, Mat(), Mat())
+//        return results.get(0, 0)[0].toInt()
+        return knn.predict(cloneImg).toInt()
     }
 
     private fun preprocessImage(img: Mat, bitmaps: MutableList<Bitmap>): Mat {
