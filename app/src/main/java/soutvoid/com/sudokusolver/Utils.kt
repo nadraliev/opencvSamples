@@ -5,8 +5,10 @@ import android.graphics.PointF
 import org.opencv.android.Utils
 import org.opencv.core.Mat
 import org.opencv.core.Point
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
+import java.io.InputStream
 
 fun Mat.toBitmap(): Bitmap =
         Bitmap.createBitmap(width(), height(), Bitmap.Config.ARGB_4444)
@@ -44,6 +46,10 @@ fun File.readBytes(): ByteArray {
     return result
 }
 
+fun InputStream.readBytes(): ByteArray =
+        toString().toByteArray()
+
+
 fun ByteArray.toInt(): Int {
     val first = this[3].toInt()
     val second = this[2].toInt() shl 8
@@ -58,5 +64,13 @@ fun Mat.countWhitePixels(): Int {
         for (x in 0 until cols())
             if (get(y, x) != null && get(y, x).isNotEmpty() && get(y, x)[0] == 255.0)
                 result++
+    return result
+}
+
+fun Bitmap.toByteArray(): ByteArray {
+    val stream = ByteArrayOutputStream()
+    compress(Bitmap.CompressFormat.PNG, 100, stream)
+    val result = stream.toByteArray()
+    stream.close()
     return result
 }

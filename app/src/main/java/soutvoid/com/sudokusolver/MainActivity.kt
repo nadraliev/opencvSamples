@@ -322,7 +322,8 @@ class MainActivity : AppCompatActivity() {
             bitmaps.add(undistortedThreshed.toBitmap())
 
             val recognizer = DigitRecognizer()
-            recognizer.train("train-images-idx3-ubyte", "train-labels-idx1-ubyte", this)
+            recognizer.train(this, bitmaps)
+            //recognizer.train("train-images-idx3-ubyte", "train-labels-idx1-ubyte", this)
 
             var dist = ceil(maxLength / 9).toInt()
             val currentCell = Mat(dist, dist, CvType.CV_8UC1)
