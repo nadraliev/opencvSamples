@@ -77,7 +77,7 @@ class DigitRecognizer {
         numRows = 128
         val imageSize = numCols * numRows
         repeat(10) {
-            numImages += context.resources.assets.list(folderFormat.format(it + 1)).take(300).size
+            numImages += context.resources.assets.list(folderFormat.format(it + 1)).size
         }
 
         val images = Mat(numImages, imageSize, CvType.CV_8U)
@@ -85,7 +85,7 @@ class DigitRecognizer {
 
         var counter = 0
         repeat(10) { folderIndex ->
-            context.resources.assets.list(folderFormat.format(folderIndex + 1)).take(300).forEachIndexed { fileIndex, fileName ->
+            context.resources.assets.list(folderFormat.format(folderIndex + 1)).forEachIndexed { fileIndex, fileName ->
                 val path = "${folderFormat.format(folderIndex + 1)}/$fileName"
                 var img = Mat(numRows, numCols, CvType.CV_32F)
                 Utils.bitmapToMat(BitmapFactory.decodeStream(context.assets.open(path)), img)
@@ -117,16 +117,17 @@ class DigitRecognizer {
     }
 
     private fun preprocessImage(img: Mat, bitmaps: MutableList<Bitmap>): Mat {
+        bitmaps.add(img.toBitmap())
         var rowTop = -1
         var rowBottom = -1
         var colLeft = -1
         var colRight = -1
 
         var temp = Mat()
-        var thresholdBottom = 50
-        var thresholdTop = 50
-        var thresholdLeft = 50
-        var thresholdRight = 50
+        var thresholdBottom = 10
+        var thresholdTop = 10
+        var thresholdLeft = 10
+        var thresholdRight = 10
         var center = img.rows() / 2
         for (i in center until img.rows()) {
             if (rowBottom == -1) {
@@ -138,7 +139,7 @@ class DigitRecognizer {
 
             if (rowTop == -1) {
                 temp = img.row(img.rows() - i)
-                if (Core.sumElems(temp).`val`[0] < thresholdTop || i == img.rows() - 1)
+                if (Core.sumElems(temp).`val`[0] < thresholdTop || i == img.rows())
                     rowTop = img.rows() - i
 
             }
@@ -152,12 +153,12 @@ class DigitRecognizer {
 
             if (colLeft == -1) {
                 temp = img.col(img.cols() - i)
-                if (Core.sumElems(temp).`val`[0] < thresholdLeft || i == img.cols() - 1)
+                if (Core.sumElems(temp).`val`[0] < thresholdLeft || i == img.cols())
                     colLeft = img.cols() - i
             }
         }
 
-        var newImg = Mat.zeros(img.rows(), img.cols(), CV_8UC1);
+        var newImg = Mat.zeros(img.rows(), img.cols(), CV_8UC1)
 
         var startAtX = (newImg.cols() / 2) - (colRight - colLeft) / 2
 
@@ -188,6 +189,10 @@ class DigitRecognizer {
             floodFill(cloneImg, flooded, Point(i.toDouble(), cloneImg.rows().toDouble() - 1), Scalar(.0))
         }
 
+        val kernel = Mat(3, 3, CvType.CV_8UC1)
+        val bytes = byteArrayOf(0, 1, 0, 1, 1, 1, 0, 1, 0)
+        kernel.put(0, 0, bytes)
+        Imgproc.erode(cloneImg, cloneImg, kernel)
         bitmaps.add(cloneImg.toBitmap())
         cloneImg = cloneImg.reshape(1, 1)
         return cloneImg
