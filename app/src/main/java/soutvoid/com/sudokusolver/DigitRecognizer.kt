@@ -2,14 +2,10 @@ package soutvoid.com.sudokusolver
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import com.orhanobut.logger.Logger
-import org.opencv.android.Utils
 import org.opencv.core.*
 import org.opencv.core.CvType.CV_8UC1
 import org.opencv.imgproc.Imgproc
 import org.opencv.imgproc.Imgproc.floodFill
-import org.opencv.ml.Ml
 import org.opencv.ml.SVM
 
 
@@ -20,6 +16,7 @@ class DigitRecognizer {
     }
 
     private var knn = SVM.create()
+    private var classifier: Classifier? = null
     public var numRows = 0
     public var numCols = 0
     public var numImages = 0
@@ -72,50 +69,61 @@ class DigitRecognizer {
 //    }
 
     fun train(context: Context, bitmaps: MutableList<Bitmap>): Boolean {
-        val folderFormat = "Sample0%02d"
-        numImages = 0
-        numCols = 128
-        numRows = 128
-        val imageSize = numCols * numRows
-        repeat(10) {
-            numImages += context.resources.assets.list(folderFormat.format(it + 1)).size
-        }
-
-        val images = Mat(numImages, imageSize, CvType.CV_8U)
-        val numbers = IntArray(numImages)
-
-        var counter = 0
-        repeat(10) { folderIndex ->
-            context.resources.assets.list(folderFormat.format(folderIndex + 1)).forEachIndexed { fileIndex, fileName ->
-                val path = "${folderFormat.format(folderIndex + 1)}/$fileName"
-                Logger.d("Processing $path")
-                var img = Mat(numRows, numCols, CvType.CV_32F)
-                Utils.bitmapToMat(BitmapFactory.decodeStream(context.assets.open(path)), img)
-                Imgproc.cvtColor(img, img, Imgproc.COLOR_RGB2GRAY)
-                Core.bitwise_not(img, img)
-                img = img.reshape(1, 1)
-                repeat(img.cols()) {
-                    images.put(counter, it, *(img.get(0, it)))
-                }
-                numbers[counter] = folderIndex
-                counter++
-            }
-        }
-        images.convertTo(images, CvType.CV_32FC1)
-        knn.type = SVM.C_SVC
-        knn.setKernel(SVM.LINEAR)
-        knn.train(images, Ml.ROW_SAMPLE, MatOfInt(*numbers))
-        println("Trained")
+        numRows = 28
+        numCols = 28
+//        val folderFormat = "Sample0%02d"
+//        numImages = 0
+//        numCols = 128
+//        numRows = 128
+//        val imageSize = numCols * numRows
+//        repeat(10) {
+//            numImages += context.resources.assets.list(folderFormat.format(it + 1)).size
+//        }
+//
+//        val images = Mat(numImages, imageSize, CvType.CV_8U)
+//        val numbers = IntArray(numImages)
+//
+//        var counter = 0
+//        repeat(10) { folderIndex ->
+//            context.resources.assets.list(folderFormat.format(folderIndex + 1)).forEachIndexed { fileIndex, fileName ->
+//                val path = "${folderFormat.format(folderIndex + 1)}/$fileName"
+//                Logger.d("Processing $path")
+//                var img = Mat(numRows, numCols, CvType.CV_32F)
+//                Utils.bitmapToMat(BitmapFactory.decodeStream(context.assets.open(path)), img)
+//                Imgproc.cvtColor(img, img, Imgproc.COLOR_RGB2GRAY)
+//                Core.bitwise_not(img, img)
+//                img = img.reshape(1, 1)
+//                repeat(img.cols()) {
+//                    images.put(counter, it, *(img.get(0, it)))
+//                }
+//                numbers[counter] = folderIndex
+//                counter++
+//            }
+//        }
+//        images.convertTo(images, CvType.CV_32FC1)
+//        knn.type = SVM.C_SVC
+//        knn.setKernel(SVM.LINEAR)
+//        knn.train(images, Ml.ROW_SAMPLE, MatOfInt(*numbers))
+//        println("Trained")
         return true
     }
 
-    fun classify(img: Mat, bitmaps: MutableList<Bitmap>): Int {
+    fun classify(img: Mat, bitmaps: MutableList<Bitmap>, context: Context): Int {
         val cloneImg = preprocessImage(img, bitmaps)
-        cloneImg.convertTo(cloneImg, CvType.CV_32F)
-//        val results = Mat(1, 1, CvType.CV_8U)
-//        knn.findNearest(cloneImg, 10, results, Mat(), Mat())
-//        return results.get(0, 0)[0].toInt()
-        return knn.predict(cloneImg).toInt()
+        cloneImg.convertTo(cloneImg, CvType.CV_8UC1)
+////        val results = Mat(1, 1, CvType.CV_8U)
+////        knn.findNearest(cloneImg, 10, results, Mat(), Mat())
+////        return results.get(0, 0)[0].toInt()
+//        return knn.predict(cloneImg).toInt()
+
+        if (classifier == null)
+            classifier = Classifier(context)
+
+        val image = cloneImg.toBitmap()
+        // The model is trained on images with black background and white font
+        //val inverted = ImageUtil.invert(image)
+        val result = classifier?.classify(image)
+        return result?.number ?: -1
     }
 
     private fun preprocessImage(img: Mat, bitmaps: MutableList<Bitmap>): Mat {
@@ -194,7 +202,7 @@ class DigitRecognizer {
         val kernel = Mat(3, 3, CvType.CV_8UC1)
         val bytes = byteArrayOf(0, 1, 0, 1, 1, 1, 0, 1, 0)
         kernel.put(0, 0, bytes)
-        Imgproc.erode(cloneImg, cloneImg, kernel)
+        //Imgproc.erode(cloneImg, cloneImg, kernel)
         bitmaps.add(cloneImg.toBitmap())
         cloneImg = cloneImg.reshape(1, 1)
         return cloneImg

@@ -349,7 +349,7 @@ class MainActivity : AppCompatActivity() {
 
                     val area = currentCell.countWhitePixels()
                     if (area > currentCell.rows() * currentCell.cols() / 30) {
-                        val number = recognizer.classify(currentCell, bitmaps)
+                        val number = recognizer.classify(currentCell, bitmaps, this)
                         stringBuilder.append("$number ")
                     } else {
                         stringBuilder.append(" empty ")
