@@ -3,6 +3,7 @@ package soutvoid.com.sudokusolver
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import com.orhanobut.logger.Logger
 import org.opencv.android.Utils
 import org.opencv.core.*
 import org.opencv.core.CvType.CV_8UC1
@@ -18,7 +19,7 @@ class DigitRecognizer {
         const val MAX_NUM_IMAGES = 60000
     }
 
-    private val knn = SVM.create()
+    private var knn = SVM.create()
     public var numRows = 0
     public var numCols = 0
     public var numImages = 0
@@ -87,6 +88,7 @@ class DigitRecognizer {
         repeat(10) { folderIndex ->
             context.resources.assets.list(folderFormat.format(folderIndex + 1)).forEachIndexed { fileIndex, fileName ->
                 val path = "${folderFormat.format(folderIndex + 1)}/$fileName"
+                Logger.d("Processing $path")
                 var img = Mat(numRows, numCols, CvType.CV_32F)
                 Utils.bitmapToMat(BitmapFactory.decodeStream(context.assets.open(path)), img)
                 Imgproc.cvtColor(img, img, Imgproc.COLOR_RGB2GRAY)

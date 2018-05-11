@@ -136,6 +136,7 @@ class MainActivity : AppCompatActivity() {
             Imgproc.erode(outerBox, outerBox, kernel)
 
             bitmaps.add(outerBox.toBitmap())
+            val outerBox2 = outerBox.clone()
 
             val linesMat = Mat()
 
@@ -189,6 +190,12 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
+
+            drawLine(leftEdge, outerBox2, Scalar(128.0, 0.0, 0.0))
+            drawLine(rightEdge, outerBox2, Scalar(128.0, 0.0, 0.0))
+            drawLine(topEdge, outerBox2, Scalar(128.0, 0.0, 0.0))
+            drawLine(bottomEdge, outerBox2, Scalar(128.0, 0.0, 0.0))
+            bitmaps.add(outerBox2.toBitmap())
 
             val left1 = Point()
             val left2 = Point()
@@ -295,6 +302,7 @@ class MainActivity : AppCompatActivity() {
 
             bitmaps.add(threshed.toBitmap())
 
+
             //delete grid here
             maxArea = -1
             point = Point(0.0, 0.0)
@@ -340,7 +348,7 @@ class MainActivity : AppCompatActivity() {
                     }
 
                     val area = currentCell.countWhitePixels()
-                    if (area > currentCell.rows() * currentCell.cols() / 20) {
+                    if (area > currentCell.rows() * currentCell.cols() / 30) {
                         val number = recognizer.classify(currentCell, bitmaps)
                         stringBuilder.append("$number ")
                     } else {
