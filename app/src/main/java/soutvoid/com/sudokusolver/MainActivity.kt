@@ -336,8 +336,10 @@ class MainActivity : AppCompatActivity() {
             var dist = ceil(maxLength / 9).toInt()
             val currentCell = Mat(dist, dist, CvType.CV_8UC1)
             val stringBuilder = StringBuilder()
+            stringBuilder.append("-------------------------------\n")
 
             for (j in 0 until 9) {
+                stringBuilder.append("|")
                 for (i in 0 until 9) {
                     for (y in 0 until dist) {
                         if (j * dist + y >= undistortedThreshed.cols()) break
@@ -350,15 +352,20 @@ class MainActivity : AppCompatActivity() {
                     val area = currentCell.countWhitePixels()
                     if (area > currentCell.rows() * currentCell.cols() / 30) {
                         val number = recognizer.classify(currentCell, bitmaps, this)
-                        stringBuilder.append("$number ")
+                        stringBuilder.append(" $number ")
                     } else {
-                        stringBuilder.append(" empty ")
+                        stringBuilder.append(" - ")
                     }
+                    if ((i + 1) % 3 == 0)
+                        stringBuilder.append("|")
                 }
-                stringBuilder.append(" col end\n ")
+                stringBuilder.append("\n")
+                if ((j + 1) % 3 == 0 && j != 9 - 1)
+                    stringBuilder.append("|-----------------------------|\n")
             }
 
-            Logger.d("sudoku\n $stringBuilder")
+            stringBuilder.append("-------------------------------\n")
+            Logger.d("sudoku\n$stringBuilder")
 
             showImage()
         }
