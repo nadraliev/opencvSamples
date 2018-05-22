@@ -7,7 +7,7 @@ import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.provider.MediaStore
 import android.support.v7.app.AppCompatActivity
-import com.orhanobut.logger.Logger
+import android.view.View
 import kotlinx.android.synthetic.main.activity_main.*
 import org.jetbrains.anko.sdk25.coroutines.onClick
 import org.opencv.android.Utils
@@ -335,11 +335,13 @@ class MainActivity : AppCompatActivity() {
 
             var dist = ceil(maxLength / 9).toInt()
             val currentCell = Mat(dist, dist, CvType.CV_8UC1)
-            val stringBuilder = StringBuilder()
-            stringBuilder.append("-------------------------------\n")
+//            val stringBuilder = StringBuilder()
+//            stringBuilder.append("-------------------------------\n")
+
+            val sudokuMatrix = Array(9) { Array(9) { 0 } }
 
             for (j in 0 until 9) {
-                stringBuilder.append("|")
+//                stringBuilder.append("|")
                 for (i in 0 until 9) {
                     for (y in 0 until dist) {
                         if (j * dist + y >= undistortedThreshed.cols()) break
@@ -352,23 +354,52 @@ class MainActivity : AppCompatActivity() {
                     val area = currentCell.countWhitePixels()
                     if (area > currentCell.rows() * currentCell.cols() / 30) {
                         val number = recognizer.classify(currentCell, bitmaps, this)
-                        stringBuilder.append(" $number ")
+                        sudokuMatrix[j][i] = number
+//                        stringBuilder.append(" $number ")
                     } else {
-                        stringBuilder.append(" - ")
+//                        stringBuilder.append(" - ")
                     }
-                    if ((i + 1) % 3 == 0)
-                        stringBuilder.append("|")
+//                    if ((i + 1) % 3 == 0)
+//                        stringBuilder.append("|")
                 }
-                stringBuilder.append("\n")
-                if ((j + 1) % 3 == 0 && j != 9 - 1)
-                    stringBuilder.append("|-----------------------------|\n")
+//                stringBuilder.append("\n")
+//                if ((j + 1) % 3 == 0 && j != 9 - 1)
+//                    stringBuilder.append("|-----------------------------|\n")
             }
 
-            stringBuilder.append("-------------------------------\n")
-            Logger.d("sudoku\n$stringBuilder")
+//            stringBuilder.append("-------------------------------\n")
+//            Logger.d("sudoku\n$stringBuilder")
+            printSudoku(sudokuMatrix)
+            SudokuSolver().solve(0, 0, sudokuMatrix)
+            printSudoku(sudokuMatrix)
+
+            sudokuResult.visibility = View.VISIBLE
+            sudokuResult.addView(SudokuView(this, sudokuMatrix.map { it.toIntArray() }.toTypedArray()))
 
             showImage()
         }
+    }
+
+    private fun printSudoku(sudokuMatrix: Array<Array<Int>>) {
+        val stringBuilder = StringBuilder()
+        stringBuilder.append("-------------------------------\n")
+        for (j in 0 until 9) {
+            stringBuilder.append("|")
+            for (i in 0 until 9) {
+                if (sudokuMatrix[j][i] != 0) {
+                    stringBuilder.append(" ${sudokuMatrix[j][i]} ")
+                } else {
+                    stringBuilder.append(" - ")
+                }
+                if ((i + 1) % 3 == 0)
+                    stringBuilder.append("|")
+            }
+            stringBuilder.append("\n")
+            if ((j + 1) % 3 == 0 && j != 9 - 1)
+                stringBuilder.append("|-----------------------------|\n")
+        }
+        stringBuilder.append("-------------------------------\n")
+        println(stringBuilder)
     }
 
     private fun mergeRelatedLines(lines: List<DoubleArray>, img: Mat) {
